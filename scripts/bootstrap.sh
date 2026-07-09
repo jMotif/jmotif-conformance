@@ -86,7 +86,7 @@ maybe_clone() {
 maybe_clone "https://github.com/jMotif/SAX.git" "${JMOTIF_JAVA_DIR}" "${JMOTIF_JAVA_REF:-master}"
 maybe_clone "https://github.com/jMotif/GI.git" "${JMOTIF_GI_DIR}" "${JMOTIF_GI_REF:-master}"
 maybe_clone "https://github.com/jMotif/sax-vsm_classic.git" "${SAX_VSM_DIR}" "${SAX_VSM_REF:-master}"
-maybe_clone "https://github.com/jMotif/GrammarViz2.git" "${GRAMMARVIZ_DIR}" "${GRAMMARVIZ_REF:-master}"
+maybe_clone "https://github.com/GrammarViz2/grammarviz2_src.git" "${GRAMMARVIZ_DIR}" "${GRAMMARVIZ_REF:-master}"
 maybe_clone "https://github.com/jMotif/jmotif-R.git" "${JMOTIF_R_DIR}" "${JMOTIF_R_REF:-master}"
 maybe_clone "https://github.com/seninp/saxpy.git" "${SAXPY_DIR}" "${SAXPY_REF:-master}"
 
