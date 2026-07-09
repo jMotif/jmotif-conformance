@@ -15,6 +15,39 @@ def verify(actual: dict[str, Any], case: dict[str, Any]) -> list[str]:
     expect = case["expect"]
     errors: list[str] = []
 
+    if "r0_rule_string" in expect:
+        got = actual.get("r0_rule_string")
+        if got != expect["r0_rule_string"]:
+            errors.append(f"r0_rule_string {got!r} != {expect['r0_rule_string']!r}")
+
+    if "rules" in expect:
+        got = {item["rule_id"]: item for item in actual.get("rules", [])}
+        for want in expect["rules"]:
+            rid = want["rule_id"]
+            rule = got.get(rid)
+            if rule is None:
+                errors.append(f"missing rule_id {rid}")
+                continue
+            if "expanded_rule_string" in want and rule.get("expanded_rule_string") != want[
+                "expanded_rule_string"
+            ]:
+                errors.append(
+                    f"rule {rid} expanded {rule.get('expanded_rule_string')!r} "
+                    f"!= {want['expanded_rule_string']!r}"
+                )
+            if "rule_string" in want and rule.get("rule_string") != want["rule_string"]:
+                errors.append(
+                    f"rule {rid} rule_string {rule.get('rule_string')!r} "
+                    f"!= {want['rule_string']!r}"
+                )
+
+    if expect.get("decompress_equals_input"):
+        if actual.get("decompressed") != actual.get("input"):
+            errors.append("decompressed string != input")
+
+    if expect.get("r0_no_repeated_digram") and not actual.get("r0_no_repeated_digram"):
+        errors.append("R0 contains a repeated digram")
+
     if "discords" in expect:
         tol = expect.get("tolerance", {}).get("nn_distance", 1e-6)
         got = actual.get("discords", [])

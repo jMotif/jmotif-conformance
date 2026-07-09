@@ -13,7 +13,7 @@
       "maxItems": 2
     },
     "operation": {
-      "enum": ["discord_bruteforce", "discord_hotsax", "sax_via_window"]
+      "enum": ["discord_bruteforce", "discord_hotsax", "sax_via_window", "repair"]
     },
     "params": { "type": "object" },
     "expect": { "type": "object" },

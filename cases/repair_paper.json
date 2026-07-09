@@ -1,0 +1,16 @@
+{
+  "id": "repair_paper",
+  "sax_string_file": "datasets/repair_paper.txt",
+  "operation": "repair",
+  "params": {},
+  "expect": {
+    "r0_rule_string": "R4 xxx R4",
+    "rules": [
+      {"rule_id": 4, "expanded_rule_string": "abc abc cba cba bac"}
+    ],
+    "decompress_equals_input": true,
+    "r0_no_repeated_digram": true
+  },
+  "aligned": ["java", "r", "python"],
+  "generated_by": "saxpy 2.0.0 / jMotif/GI 728606f"
+}

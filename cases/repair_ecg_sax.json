@@ -1,0 +1,12 @@
+{
+  "id": "repair_ecg_sax",
+  "sax_string_file": "datasets/ecg_sax_string.txt",
+  "operation": "repair",
+  "params": {},
+  "expect": {
+    "decompress_equals_input": true,
+    "r0_no_repeated_digram": true
+  },
+  "aligned": ["java", "r", "python"],
+  "generated_by": "saxpy tests/ecg_sax_string.txt"
+}

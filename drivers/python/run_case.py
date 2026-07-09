@@ -11,7 +11,31 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from case_lib import load_case, load_series, nr_strategy_python, repo_root  # noqa: E402
+from case_lib import load_case, load_sax_string, load_series, nr_strategy_python, repo_root  # noqa: E402
+from repair_lib import normalize_repair_output  # noqa: E402
+
+
+def run_repair(sax_string: str) -> dict:
+    from saxpy.repair import str_to_repair_grammar
+
+    grammar = str_to_repair_grammar(sax_string)
+    rules = []
+    for rid in sorted(grammar.keys()):
+        rule = grammar[rid]
+        rules.append(
+            {
+                "rule_id": int(rid),
+                "rule_string": rule.rule_string,
+                "expanded_rule_string": rule.expanded_rule_string,
+            }
+        )
+    return normalize_repair_output(
+        {
+            "input": sax_string,
+            "r0_rule_string": grammar[0].rule_string,
+            "rules": rules,
+        }
+    )
 
 
 def run_case(case: dict) -> dict:
@@ -20,9 +44,13 @@ def run_case(case: dict) -> dict:
     from saxpy.hotsax import find_discords_hotsax
     from saxpy.sax import sax_via_window
 
-    series = np.asarray(load_series(case, repo_root()), dtype=float)
     op = case["operation"]
-    params = case["params"]
+    params = case.get("params", {})
+
+    if op == "repair":
+        return run_repair(load_sax_string(case, repo_root()))
+
+    series = np.asarray(load_series(case, repo_root()), dtype=float)
 
     if op == "discord_bruteforce":
         rows = find_discords_brute_force(

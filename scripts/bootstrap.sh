@@ -19,6 +19,15 @@ fi
 : "${JMOTIF_JAVA_DIR:?set JMOTIF_JAVA_DIR or clone SAX/jmotif-java next to this repo}"
 : "${JMOTIF_R_DIR:=${ROOT}/../jmotif-R}"
 : "${SAXPY_DIR:=${ROOT}/../saxpy}"
+if [[ -z "${JMOTIF_GI_DIR:-}" ]]; then
+  for candidate in "${ROOT}/../GI" "${ROOT}/../jmotif-gi"; do
+    if [[ -d "${candidate}" ]]; then
+      JMOTIF_GI_DIR="${candidate}"
+      break
+    fi
+  done
+fi
+: "${JMOTIF_GI_DIR:?set JMOTIF_GI_DIR or clone GI/jmotif-gi next to this repo}"
 
 log() { printf '==> %s\n' "$*"; }
 
@@ -57,6 +66,7 @@ maybe_clone() {
 }
 
 maybe_clone "https://github.com/jMotif/SAX.git" "${JMOTIF_JAVA_DIR}" "${JMOTIF_JAVA_REF:-master}"
+maybe_clone "https://github.com/jMotif/GI.git" "${JMOTIF_GI_DIR}" "${JMOTIF_GI_REF:-master}"
 maybe_clone "https://github.com/jMotif/jmotif-R.git" "${JMOTIF_R_DIR}" "${JMOTIF_R_REF:-master}"
 maybe_clone "https://github.com/seninp/saxpy.git" "${SAXPY_DIR}" "${SAXPY_REF:-master}"
 
@@ -65,9 +75,15 @@ mvn -q -f "${JMOTIF_JAVA_DIR}/pom.xml" package -P single -DskipTests
 JAVA_JAR="${JMOTIF_JAVA_DIR}/target/jmotif-sax-"*"-jar-with-dependencies.jar"
 JAVA_JAR="$(ls -1 ${JAVA_JAR} | tail -n 1)"
 
+log "building jmotif-gi"
+mvn -q -f "${JMOTIF_GI_DIR}/pom.xml" package -DskipTests
+GI_JAR="${JMOTIF_GI_DIR}/target/jmotif-gi-2.0.0.jar"
+GI_CP="$(mvn -q -f "${JMOTIF_GI_DIR}/pom.xml" -Dmdep.outputFile=/dev/stdout dependency:build-classpath)"
+
 log "compiling Java conformance driver"
 mkdir -p "${ROOT}/drivers/java"
-javac -cp "${JAVA_JAR}" -d "${ROOT}/drivers/java" "${ROOT}/drivers/java/ConformanceRunner.java"
+javac -cp "${GI_JAR}:${GI_CP}" -d "${ROOT}/drivers/java" "${ROOT}/drivers/java/ConformanceRunner.java"
+JAVA_CLASSPATH="${GI_JAR}:${GI_CP}:${ROOT}/drivers/java"
 
 log "installing jmotif-R"
 R_LIBS_USER="${ROOT}/.build/r-library"
@@ -91,7 +107,9 @@ fi
 cat >"${ENV_FILE}" <<EOF
 JMOTIF_JAVA_DIR=${JMOTIF_JAVA_DIR}
 JMOTIF_JAVA_JAR=${JAVA_JAR}
-JMOTIF_JAVA_CLASSPATH=${JAVA_JAR}:${ROOT}/drivers/java
+JMOTIF_JAVA_CLASSPATH=${JAVA_CLASSPATH}
+JMOTIF_GI_DIR=${JMOTIF_GI_DIR}
+JMOTIF_GI_JAR=${GI_JAR}
 JMOTIF_R_DIR=${JMOTIF_R_DIR}
 R_LIBS_USER=${R_LIBS_USER}
 SAXPY_DIR=${SAXPY_DIR}

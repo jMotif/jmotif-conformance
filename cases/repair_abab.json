@@ -1,0 +1,13 @@
+{
+  "id": "repair_abab",
+  "sax_string_file": "datasets/repair_abab.txt",
+  "operation": "repair",
+  "params": {},
+  "expect": {
+    "r0_rule_string": "R1 R1",
+    "decompress_equals_input": true,
+    "r0_no_repeated_digram": true
+  },
+  "aligned": ["java", "r", "python"],
+  "generated_by": "saxpy 2.0.0"
+}

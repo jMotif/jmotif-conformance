@@ -18,6 +18,15 @@ def load_case(path: Path) -> dict[str, Any]:
         return json.load(handle)
 
 
+def load_sax_string(case: dict[str, Any], root: Path) -> str:
+    if "sax_string" in case:
+        return case["sax_string"].strip()
+    if "sax_string_file" not in case:
+        raise KeyError("case requires sax_string or sax_string_file")
+    text = (root / case["sax_string_file"]).read_text(encoding="utf-8").strip()
+    return " ".join(text.split())
+
+
 def load_series(case: dict[str, Any], root: Path) -> list[float]:
     series_path = root / case["series"]
     values: list[float] = []

@@ -69,8 +69,9 @@ Review the diff carefully before committing.
 | `sax_via_window` (`NONE`) | yes |
 | `discord_bruteforce` | yes |
 | `discord_hotsax` (`NONE`, positions + distances) | yes |
+| `repair` (RePair decompression + R0 invariants) | yes |
 
-EMMA, bitmap, parallel SAX, and approximate HOT-SAX numerosity strategies are out of scope for v1.
+RePair rule **numbering** is compared exactly only on tie-free inputs (paper example, `a b a b`). Long SAX strings check decompression round-trip and the no-repeated-digram guarantee on R0 instead of per-rule IDs.
 
 ## Requirements
 

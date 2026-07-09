@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -6,6 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import net.seninp.gi.logic.GrammarRuleRecord;
+import net.seninp.gi.logic.GrammarRules;
+import net.seninp.gi.repair.RePairFactory;
+import net.seninp.gi.repair.RePairGrammar;
 import net.seninp.jmotif.sax.NumerosityReductionStrategy;
 import net.seninp.jmotif.sax.SAXException;
 import net.seninp.jmotif.sax.SAXProcessor;
@@ -19,7 +24,7 @@ import net.seninp.jmotif.sax.discord.HOTSAXImplementation;
 import net.seninp.jmotif.sax.registry.LargeWindowAlgorithm;
 
 /**
- * Minimal conformance driver for jmotif-sax. Invoked by scripts/run_all.py with
+ * Conformance driver for jmotif-sax and jmotif-gi. Invoked by scripts/run_all.py with
  * explicit flags derived from a case JSON file.
  */
 public class ConformanceRunner {
@@ -33,6 +38,7 @@ public class ConformanceRunner {
     String operation = args[0];
     String repoRoot = ".";
     String seriesPath = null;
+    String saxStringFile = null;
     int sliceStart = 0;
     Integer sliceEnd = null;
     int window = 100;
@@ -50,6 +56,9 @@ public class ConformanceRunner {
           break;
         case "--series":
           seriesPath = args[++i];
+          break;
+        case "--sax-string-file":
+          saxStringFile = args[++i];
           break;
         case "--slice-start":
           sliceStart = Integer.parseInt(args[++i]);
@@ -83,24 +92,45 @@ public class ConformanceRunner {
       }
     }
 
-    if (seriesPath == null) {
-      throw new IllegalArgumentException("--series is required");
-    }
-
-    double[] series = loadSeries(Paths.get(repoRoot, seriesPath), sliceStart, sliceEnd);
     switch (operation) {
+      case "repair":
+        if (saxStringFile == null) {
+          throw new IllegalArgumentException("--sax-string-file is required");
+        }
+        String saxString = loadSaxString(Paths.get(repoRoot, saxStringFile));
+        printRepairResult(saxString, repair(saxString));
+        break;
       case "discord_bruteforce":
-        printDiscordResult(bruteForce(series, window, numDiscords, threshold));
-        break;
       case "discord_hotsax":
-        printDiscordResult(hotSax(series, window, paa, alphabet, numDiscords, threshold, nrStrategy));
-        break;
       case "sax_via_window":
-        printSaxResult(saxViaWindow(series, window, paa, alphabet, threshold, nrStrategy), pinned);
+        if (seriesPath == null) {
+          throw new IllegalArgumentException("--series is required");
+        }
+        double[] series = loadSeries(Paths.get(repoRoot, seriesPath), sliceStart, sliceEnd);
+        if ("discord_bruteforce".equals(operation)) {
+          printDiscordResult(bruteForce(series, window, numDiscords, threshold));
+        }
+        else if ("discord_hotsax".equals(operation)) {
+          printDiscordResult(hotSax(series, window, paa, alphabet, numDiscords, threshold, nrStrategy));
+        }
+        else {
+          printSaxResult(saxViaWindow(series, window, paa, alphabet, threshold, nrStrategy), pinned);
+        }
         break;
       default:
         throw new IllegalArgumentException("unsupported operation: " + operation);
     }
+  }
+
+  private static String loadSaxString(Path path) throws IOException {
+    String text = Files.readString(path, StandardCharsets.UTF_8).trim();
+    return String.join(" ", text.split("\\s+"));
+  }
+
+  private static GrammarRules repair(String saxString) {
+    RePairGrammar grammar = RePairFactory.buildGrammar(saxString);
+    grammar.expandRules();
+    return grammar.toGrammarRulesData();
   }
 
   private static double[] loadSeries(Path path, int start, Integer end) throws IOException, SAXException {
@@ -150,6 +180,62 @@ public class ConformanceRunner {
     return out;
   }
 
+  private static boolean r0NoRepeatedDigram(String r0RuleString) {
+    String[] tokens = r0RuleString.trim().split("\\s+");
+    if (tokens.length < 2) {
+      return true;
+    }
+    java.util.HashSet<String> seen = new java.util.HashSet<>();
+    for (int i = 0; i < tokens.length - 1; i++) {
+      String digram = tokens[i] + " " + tokens[i + 1];
+      if (!seen.add(digram)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private static void printRepairResult(String input, GrammarRules rules) {
+    GrammarRuleRecord r0 = rules.get(0);
+    String r0RuleString = r0.getRuleString().trim();
+    String decompressed = r0.getExpandedRuleString().trim();
+    StringBuilder sb = new StringBuilder("{\"input\":");
+    appendJsonString(sb, input);
+    sb.append(",\"r0_rule_string\":");
+    appendJsonString(sb, r0RuleString);
+    sb.append(",\"decompressed\":");
+    appendJsonString(sb, decompressed);
+    sb.append(",\"r0_no_repeated_digram\":").append(r0NoRepeatedDigram(r0RuleString));
+    sb.append(",\"rules\":[");
+    for (int i = 0; i < rules.size(); i++) {
+      GrammarRuleRecord rec = rules.get(i);
+      if (i > 0) {
+        sb.append(',');
+      }
+      sb.append("{\"rule_id\":").append(rec.getRuleNumber()).append(",\"rule_string\":");
+      appendJsonString(sb, rec.getRuleString().trim());
+      sb.append(",\"expanded_rule_string\":");
+      appendJsonString(sb, rec.getExpandedRuleString().trim());
+      sb.append('}');
+    }
+    sb.append("]}");
+    System.out.println(sb);
+  }
+
+  private static void appendJsonString(StringBuilder sb, String value) {
+    sb.append('"');
+    for (int i = 0; i < value.length(); i++) {
+      char ch = value.charAt(i);
+      if (ch == '\\' || ch == '"') {
+        sb.append('\\').append(ch);
+      }
+      else {
+        sb.append(ch);
+      }
+    }
+    sb.append('"');
+  }
+
   private static void printDiscordResult(DiscordRecords records) {
     StringBuilder sb = new StringBuilder("{\"discords\":[");
     for (int i = 0; i < records.getSize(); i++) {
@@ -187,7 +273,8 @@ public class ConformanceRunner {
   }
 
   private static void usage() {
-    System.err.println("usage: ConformanceRunner <operation> [--repo-root PATH] --series PATH "
+    System.err.println("usage: ConformanceRunner <operation> [--repo-root PATH] "
+        + "[--series PATH | --sax-string-file PATH] "
         + "[--slice-start N] [--slice-end N] [--window N] [--paa N] [--alphabet N] "
         + "[--num-discords N] [--threshold X] [--nr-strategy NAME] [--pinned-indices [0,1]]");
     System.exit(2);

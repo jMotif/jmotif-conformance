@@ -31,7 +31,7 @@ def load_env(path: Path) -> dict[str, str]:
 
 
 def java_args(case: dict, root: Path) -> list[str]:
-    params = case["params"]
+    params = case.get("params", {})
     args = [
         "java",
         "-Dorg.slf4j.simpleLogger.defaultLogLevel=off",
@@ -41,9 +41,12 @@ def java_args(case: dict, root: Path) -> list[str]:
         case["operation"],
         "--repo-root",
         str(root),
-        "--series",
-        case["series"],
     ]
+    if case["operation"] == "repair":
+        args.extend(["--sax-string-file", case["sax_string_file"]])
+        return args
+
+    args.extend(["--series", case["series"]])
     start, end = case.get("slice", [0, None])
     args.extend(["--slice-start", str(start)])
     if end is not None:
