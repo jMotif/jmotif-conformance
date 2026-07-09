@@ -38,9 +38,8 @@ require_cmd Rscript
 if command -v uv >/dev/null 2>&1; then
   PYTHON_BOOTSTRAP="uv"
 else
-  PYTHON_BOOTSTRAP="pip"
+  PYTHON_BOOTSTRAP="venv"
   require_cmd python3
-  require_cmd pip3
 fi
 
 maybe_clone() {
@@ -77,12 +76,16 @@ export R_LIBS_USER
 R CMD INSTALL -l "${R_LIBS_USER}" "${JMOTIF_R_DIR}"
 
 log "installing saxpy"
-if [[ "${PYTHON_BOOTSTRAP}" == "uv" ]]; then
+if command -v uv >/dev/null 2>&1; then
   (cd "${SAXPY_DIR}" && uv pip install -e . >/dev/null)
   PYTHON_BIN="$(cd "${SAXPY_DIR}" && uv run which python)"
 else
-  pip3 install --user -e "${SAXPY_DIR}" >/dev/null
-  PYTHON_BIN="$(command -v python3)"
+  PYTHON_VENV="${ROOT}/.build/python-venv"
+  if [[ ! -x "${PYTHON_VENV}/bin/python" ]]; then
+    python3 -m venv "${PYTHON_VENV}"
+  fi
+  "${PYTHON_VENV}/bin/pip" install -q -e "${SAXPY_DIR}"
+  PYTHON_BIN="${PYTHON_VENV}/bin/python"
 fi
 
 cat >"${ENV_FILE}" <<EOF
