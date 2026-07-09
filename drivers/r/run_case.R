@@ -2,6 +2,7 @@
 
 suppressPackageStartupMessages({
   library(jsonlite)
+  library(jmotif)
 })
 
 args <- commandArgs(trailingOnly = TRUE)

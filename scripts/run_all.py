@@ -34,6 +34,7 @@ def java_args(case: dict, root: Path) -> list[str]:
     params = case["params"]
     args = [
         "java",
+        "-Dorg.slf4j.simpleLogger.defaultLogLevel=off",
         "-cp",
         os.environ["JMOTIF_JAVA_CLASSPATH"],
         "ConformanceRunner",
@@ -91,7 +92,13 @@ def run_impl(name: str, case_path: Path, case: dict, root: Path) -> dict:
         raise RuntimeError(
             f"{name} failed ({proc.returncode})\nstdout:\n{proc.stdout}\nstderr:\n{proc.stderr}"
         )
-    return json.loads(proc.stdout)
+    stdout = proc.stdout.strip()
+    if name == "java":
+        start = stdout.find("{")
+        if start < 0:
+            raise RuntimeError(f"java output missing JSON:\n{stdout}")
+        stdout = stdout[start:]
+    return json.loads(stdout)
 
 
 def main() -> int:

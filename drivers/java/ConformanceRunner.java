@@ -24,7 +24,7 @@ import net.seninp.jmotif.sax.registry.LargeWindowAlgorithm;
  */
 public class ConformanceRunner {
 
-  private static final Pattern INT_LIST = Pattern.compile("\\[(\\d+(?:,\\d+)*)\\]");
+  private static final Pattern INT_LIST = Pattern.compile("\\[\\s*(\\d+(?:\\s*,\\s*\\d+)*)\\s*\\]");
 
   public static void main(String[] args) throws Exception {
     if (args.length < 1) {
