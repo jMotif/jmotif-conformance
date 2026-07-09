@@ -1,0 +1,7 @@
+.env.local
+__pycache__/
+*.pyc
+.Rproj.user
+drivers/java/*.class
+.build/
+*.log

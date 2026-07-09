@@ -1,0 +1,24 @@
+{
+  "id": "sax_via_window_ecg_cli",
+  "series": "datasets/ecg0606_1.csv",
+  "slice": [0, null],
+  "operation": "sax_via_window",
+  "params": {
+    "window": 30,
+    "paa": 4,
+    "alphabet": 3,
+    "threshold": 0.01,
+    "nr_strategy": "NONE",
+    "pinned_indices": [0, 8, 13, 20]
+  },
+  "expect": {
+    "sax_windows": [
+      {"index": 0, "word": "aabc"},
+      {"index": 8, "word": "aacc"},
+      {"index": 13, "word": "aacc"},
+      {"index": 20, "word": "abcb"}
+    ]
+  },
+  "aligned": ["java", "r", "python"],
+  "generated_by": "saxpy 2.0.0 (CLI default params)"
+}

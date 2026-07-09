@@ -1,0 +1,20 @@
+{
+  "id": "discord_bruteforce_ecg_slice",
+  "series": "datasets/ecg0606_1.csv",
+  "slice": [100, 500],
+  "operation": "discord_bruteforce",
+  "params": {
+    "window": 100,
+    "num_discords": 2,
+    "threshold": 0.01
+  },
+  "expect": {
+    "discords": [
+      {"position": 73, "nn_distance": 6.198555329625453},
+      {"position": 219, "nn_distance": 5.563692399101614}
+    ],
+    "tolerance": {"nn_distance": 1e-6}
+  },
+  "aligned": ["java", "r", "python"],
+  "generated_by": "saxpy 2.0.0"
+}

@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ENV_FILE="${ROOT}/scripts/.env.local"
+PIN_FILE="${ROOT}/scripts/pin_versions.env"
+
+# shellcheck disable=SC1090
+source "${PIN_FILE}"
+
+if [[ -z "${JMOTIF_JAVA_DIR:-}" ]]; then
+  for candidate in "${ROOT}/../SAX" "${ROOT}/../jmotif-java"; do
+    if [[ -d "${candidate}" ]]; then
+      JMOTIF_JAVA_DIR="${candidate}"
+      break
+    fi
+  done
+fi
+: "${JMOTIF_JAVA_DIR:?set JMOTIF_JAVA_DIR or clone SAX/jmotif-java next to this repo}"
+: "${JMOTIF_R_DIR:=${ROOT}/../jmotif-R}"
+: "${SAXPY_DIR:=${ROOT}/../saxpy}"
+
+log() { printf '==> %s\n' "$*"; }
+
+require_cmd() {
+  command -v "$1" >/dev/null 2>&1 || {
+    echo "missing required command: $1" >&2
+    exit 1
+  }
+}
+
+log "checking prerequisites"
+require_cmd git
+require_cmd mvn
+require_cmd java
+require_cmd R
+require_cmd Rscript
+if command -v uv >/dev/null 2>&1; then
+  PYTHON_BOOTSTRAP="uv"
+else
+  PYTHON_BOOTSTRAP="pip"
+  require_cmd python3
+  require_cmd pip3
+fi
+
+maybe_clone() {
+  local url="$1"
+  local dir="$2"
+  local ref="$3"
+  if [[ ! -d "${dir}/.git" ]]; then
+    log "cloning ${url} into ${dir}"
+    git clone "${url}" "${dir}"
+  fi
+  log "checking out ${ref} in ${dir}"
+  git -C "${dir}" fetch --tags origin
+  git -C "${dir}" checkout "${ref}"
+  git -C "${dir}" pull --ff-only origin "$(git -C "${dir}" rev-parse --abbrev-ref HEAD)" || true
+}
+
+maybe_clone "https://github.com/jMotif/SAX.git" "${JMOTIF_JAVA_DIR}" "${JMOTIF_JAVA_REF:-master}"
+maybe_clone "https://github.com/jMotif/jmotif-R.git" "${JMOTIF_R_DIR}" "${JMOTIF_R_REF:-master}"
+maybe_clone "https://github.com/seninp/saxpy.git" "${SAXPY_DIR}" "${SAXPY_REF:-master}"
+
+log "building jmotif-sax"
+mvn -q -f "${JMOTIF_JAVA_DIR}/pom.xml" package -P single -DskipTests
+JAVA_JAR="${JMOTIF_JAVA_DIR}/target/jmotif-sax-"*"-jar-with-dependencies.jar"
+JAVA_JAR="$(ls -1 ${JAVA_JAR} | tail -n 1)"
+
+log "compiling Java conformance driver"
+mkdir -p "${ROOT}/drivers/java"
+javac -cp "${JAVA_JAR}" -d "${ROOT}/drivers/java" "${ROOT}/drivers/java/ConformanceRunner.java"
+
+log "installing jmotif-R"
+R CMD INSTALL "${JMOTIF_R_DIR}"
+
+log "installing saxpy"
+if [[ "${PYTHON_BOOTSTRAP}" == "uv" ]]; then
+  (cd "${SAXPY_DIR}" && uv pip install -e . >/dev/null)
+  PYTHON_BIN="$(cd "${SAXPY_DIR}" && uv run which python)"
+else
+  pip3 install -e "${SAXPY_DIR}" >/dev/null
+  PYTHON_BIN="$(command -v python3)"
+fi
+
+cat >"${ENV_FILE}" <<EOF
+JMOTIF_JAVA_DIR=${JMOTIF_JAVA_DIR}
+JMOTIF_JAVA_JAR=${JAVA_JAR}
+JMOTIF_JAVA_CLASSPATH=${JAVA_JAR}:${ROOT}/drivers/java
+JMOTIF_R_DIR=${JMOTIF_R_DIR}
+SAXPY_DIR=${SAXPY_DIR}
+PYTHON_BIN=${PYTHON_BIN}
+EOF
+
+log "wrote ${ENV_FILE}"
+log "bootstrap complete"

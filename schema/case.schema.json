@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "jmotif conformance case",
+  "type": "object",
+  "required": ["id", "series", "operation", "params", "expect", "aligned"],
+  "properties": {
+    "id": { "type": "string" },
+    "series": { "type": "string" },
+    "slice": {
+      "type": "array",
+      "items": [{ "type": "integer" }, { "type": ["integer", "null"] }],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "operation": {
+      "enum": ["discord_bruteforce", "discord_hotsax", "sax_via_window"]
+    },
+    "params": { "type": "object" },
+    "expect": { "type": "object" },
+    "aligned": {
+      "type": "array",
+      "items": { "enum": ["java", "r", "python"] }
+    },
+    "generated_by": { "type": "string" }
+  }
+}

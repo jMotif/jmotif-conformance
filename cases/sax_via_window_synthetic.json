@@ -1,0 +1,22 @@
+{
+  "id": "sax_via_window_synthetic",
+  "series": "datasets/synthetic_window_60.csv",
+  "slice": [0, null],
+  "operation": "sax_via_window",
+  "params": {
+    "window": 6,
+    "paa": 3,
+    "alphabet": 3,
+    "threshold": 0.01,
+    "nr_strategy": "NONE",
+    "pinned_indices": [0, 53]
+  },
+  "expect": {
+    "sax_windows": [
+      {"index": 0, "word": "cca"},
+      {"index": 53, "word": "acc"}
+    ]
+  },
+  "aligned": ["java", "r", "python"],
+  "generated_by": "saxpy 2.0.0 / jmotif-R test_SAX_via_window"
+}
