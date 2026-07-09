@@ -90,10 +90,14 @@ log "installing jmotif-R"
 R_LIBS_USER="${ROOT}/.build/r-library"
 mkdir -p "${R_LIBS_USER}"
 export R_LIBS_USER
-if ! Rscript -e 'quit(status=ifelse(requireNamespace("Rcpp", quietly=TRUE, lib.loc=Sys.getenv("R_LIBS_USER")), 0, 1))'; then
-  log "installing Rcpp into ${R_LIBS_USER}"
-  Rscript -e 'install.packages("Rcpp", lib=Sys.getenv("R_LIBS_USER"), repos="https://cloud.r-project.org")'
-fi
+log "installing R dependencies into ${R_LIBS_USER}"
+Rscript -e '
+lib <- Sys.getenv("R_LIBS_USER")
+dir.create(lib, showWarnings = FALSE, recursive = TRUE)
+pkgs <- c("Rcpp", "jsonlite")
+need <- pkgs[!vapply(pkgs, function(p) requireNamespace(p, quietly = TRUE, lib.loc = lib), logical(1))]
+if (length(need)) install.packages(need, lib = lib, repos = "https://cloud.r-project.org")
+'
 R CMD INSTALL -l "${R_LIBS_USER}" "${JMOTIF_R_DIR}"
 
 log "installing saxpy"
