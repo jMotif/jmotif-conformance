@@ -95,8 +95,8 @@ mvn -q -f "${JMOTIF_JAVA_DIR}/pom.xml" install -P single -DskipTests
 JAVA_JAR="${JMOTIF_JAVA_DIR}/target/jmotif-sax-"*"-jar-with-dependencies.jar"
 JAVA_JAR="$(ls -1 ${JAVA_JAR} | tail -n 1)"
 
-log "building jmotif-gi"
-mvn -q -f "${JMOTIF_GI_DIR}/pom.xml" package -DskipTests
+log "building jmotif-gi (install to local repo for grammarviz2)"
+mvn -q -f "${JMOTIF_GI_DIR}/pom.xml" install -DskipTests
 GI_JAR="${JMOTIF_GI_DIR}/target/jmotif-gi-"*".jar"
 GI_JAR="$(ls -1 ${GI_JAR} | grep -v 'sources\\|javadoc' | head -n 1)"
 GI_CP="$(mvn -q -f "${JMOTIF_GI_DIR}/pom.xml" -Dmdep.outputFile=/dev/stdout dependency:build-classpath)"
