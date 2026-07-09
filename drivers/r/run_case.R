@@ -83,4 +83,4 @@ run_case <- function(case, root) {
 }
 
 result <- run_case(case, repo_root)
-cat(toJSON(result, auto_unbox = TRUE, pretty = FALSE))
+cat(toJSON(result, auto_unbox = TRUE, digits = 16, pretty = FALSE))
