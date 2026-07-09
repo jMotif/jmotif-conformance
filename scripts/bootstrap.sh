@@ -71,14 +71,17 @@ mkdir -p "${ROOT}/drivers/java"
 javac -cp "${JAVA_JAR}" -d "${ROOT}/drivers/java" "${ROOT}/drivers/java/ConformanceRunner.java"
 
 log "installing jmotif-R"
-R CMD INSTALL "${JMOTIF_R_DIR}"
+R_LIBS_USER="${ROOT}/.build/r-library"
+mkdir -p "${R_LIBS_USER}"
+export R_LIBS_USER
+R CMD INSTALL -l "${R_LIBS_USER}" "${JMOTIF_R_DIR}"
 
 log "installing saxpy"
 if [[ "${PYTHON_BOOTSTRAP}" == "uv" ]]; then
   (cd "${SAXPY_DIR}" && uv pip install -e . >/dev/null)
   PYTHON_BIN="$(cd "${SAXPY_DIR}" && uv run which python)"
 else
-  pip3 install -e "${SAXPY_DIR}" >/dev/null
+  pip3 install --user -e "${SAXPY_DIR}" >/dev/null
   PYTHON_BIN="$(command -v python3)"
 fi
 
@@ -87,6 +90,7 @@ JMOTIF_JAVA_DIR=${JMOTIF_JAVA_DIR}
 JMOTIF_JAVA_JAR=${JAVA_JAR}
 JMOTIF_JAVA_CLASSPATH=${JAVA_JAR}:${ROOT}/drivers/java
 JMOTIF_R_DIR=${JMOTIF_R_DIR}
+R_LIBS_USER=${R_LIBS_USER}
 SAXPY_DIR=${SAXPY_DIR}
 PYTHON_BIN=${PYTHON_BIN}
 EOF

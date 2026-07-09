@@ -80,6 +80,8 @@ def run_impl(name: str, case_path: Path, case: dict, root: Path) -> dict:
         cmd = [python_bin, str(root / "drivers/python/run_case.py"), str(case_path)]
     elif name == "r":
         cmd = ["Rscript", str(root / "drivers/r/run_case.R"), str(case_path)]
+        if "R_LIBS_USER" in env:
+            env["R_LIBS"] = env["R_LIBS_USER"]
     elif name == "java":
         cmd = java_args(case, root)
     else:
