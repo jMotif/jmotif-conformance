@@ -70,14 +70,15 @@ maybe_clone "https://github.com/jMotif/GI.git" "${JMOTIF_GI_DIR}" "${JMOTIF_GI_R
 maybe_clone "https://github.com/jMotif/jmotif-R.git" "${JMOTIF_R_DIR}" "${JMOTIF_R_REF:-master}"
 maybe_clone "https://github.com/seninp/saxpy.git" "${SAXPY_DIR}" "${SAXPY_REF:-master}"
 
-log "building jmotif-sax"
-mvn -q -f "${JMOTIF_JAVA_DIR}/pom.xml" package -P single -DskipTests
+log "building jmotif-sax (install to local repo for jmotif-gi)"
+mvn -q -f "${JMOTIF_JAVA_DIR}/pom.xml" install -P single -DskipTests
 JAVA_JAR="${JMOTIF_JAVA_DIR}/target/jmotif-sax-"*"-jar-with-dependencies.jar"
 JAVA_JAR="$(ls -1 ${JAVA_JAR} | tail -n 1)"
 
 log "building jmotif-gi"
 mvn -q -f "${JMOTIF_GI_DIR}/pom.xml" package -DskipTests
-GI_JAR="${JMOTIF_GI_DIR}/target/jmotif-gi-2.0.0.jar"
+GI_JAR="${JMOTIF_GI_DIR}/target/jmotif-gi-"*".jar"
+GI_JAR="$(ls -1 ${GI_JAR} | grep -v 'sources\\|javadoc' | head -n 1)"
 GI_CP="$(mvn -q -f "${JMOTIF_GI_DIR}/pom.xml" -Dmdep.outputFile=/dev/stdout dependency:build-classpath)"
 
 log "compiling Java conformance driver"
