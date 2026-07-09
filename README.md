@@ -34,6 +34,7 @@ Sibling checkout layout:
   SAX/              # or jmotif-java/
   GI/
   sax-vsm_classic/
+  grammarviz2_src/  # or GrammarViz2/
   jmotif-R/
   saxpy/
 ```
@@ -73,10 +74,26 @@ Review the diff carefully before committing.
 | `discord_hotsax` (`NONE`, positions + distances) | yes |
 | `repair` (RePair decompression + R0 invariants) | yes |
 | `saxvsm_classify` (CBF, Gun_Point accuracy) | yes |
+| `rra_discord` (ecg0606 top region, tier-B) | yes |
 
 RePair rule **numbering** is compared exactly only on tie-free inputs (paper example, `a b a b`). Long SAX strings check decompression round-trip and the no-repeated-digram guarantee on R0 instead of per-rule IDs.
 
 SAX-VSM cases pin train/test accuracy (`correct`, `total`, `accuracy`, `error`) at operating points aligned with sax-vsm 2.0.1 / saxpy 2.0.0.
+
+### RRA tier-B (`rra_discord`)
+
+RRA (Rare Rule Anomaly) uses variable-length grammar-rule intervals, so cross-language agreement is checked at the **region** level, not on exact span boundaries or distances:
+
+| Checked (conform) | Not checked (de-conform) |
+|-------------------|--------------------------|
+| RRA top span overlaps the HOT-SAX discord window on ecg0606 (primary anomaly region) | Exact `start` / `end` of the top discord |
+| | Whether index 430 lies strictly inside the RRA span (Java NewRepair can shift by one vs saxpy/R) |
+| | `rule_id` of the winning interval |
+| | Exact `nn_distance` (early-abandon is approximate) |
+| | Distance-call count / search trajectory |
+| | Multi-discord ordering beyond the primary region |
+
+The Java driver follows the saxpy / jmotif-R pipeline (RePair on the composed SAX string, saxpy-style zero-coverage filtering, seeded phase-2 shuffle). GrammarViz’s pruned-RRA CLI path is intentionally not used here.
 
 ## Requirements
 

@@ -80,4 +80,46 @@ def verify(actual: dict[str, Any], case: dict[str, Any]) -> list[str]:
             if word != item["word"]:
                 errors.append(f"sax index {index}: {word!r} != {item['word']!r}")
 
+    if "top_discord_contains_index" in expect:
+        idx = expect["top_discord_contains_index"]
+        tol = int(expect.get("top_discord_index_tolerance", 0))
+        top = actual.get("top_discord")
+        if not top:
+            errors.append("missing top_discord in output")
+        else:
+            start = int(top["start"]) - tol
+            end = int(top["end"])
+            if not (start <= idx < end):
+                errors.append(
+                    f"top discord [{top['start']}, {top['end']}) "
+                    f"does not contain index {idx} (tol={tol})"
+                )
+
+    if expect.get("hotsax_top_in_top_discord"):
+        top = actual.get("top_discord")
+        hot = actual.get("hotsax_top_position")
+        if top is None or hot is None:
+            errors.append("missing top_discord or hotsax_top_position for cross-check")
+        elif not (int(top["start"]) <= int(hot) < int(top["end"])):
+            errors.append(
+                f"hotsax position {hot} not in top discord [{top['start']}, {top['end']})"
+            )
+
+    if expect.get("rra_overlaps_hotsax_window"):
+        top = actual.get("top_discord")
+        hot = actual.get("hotsax_top_position")
+        window = int(case.get("params", {}).get("window", 0))
+        if top is None or hot is None or window <= 0:
+            errors.append("missing top_discord, hotsax_top_position, or window for overlap check")
+        else:
+            rra_start = int(top["start"])
+            rra_end = int(top["end"])
+            hot_start = int(hot)
+            hot_end = hot_start + window
+            if max(rra_start, hot_start) >= min(rra_end, hot_end):
+                errors.append(
+                    f"RRA span [{rra_start}, {rra_end}) does not overlap "
+                    f"HOT-SAX window [{hot_start}, {hot_end})"
+                )
+
     return errors

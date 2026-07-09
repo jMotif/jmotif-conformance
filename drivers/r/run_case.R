@@ -178,6 +178,38 @@ run_case <- function(case, root) {
 
   series <- load_series(case, root)
 
+  if (op == "rra_discord") {
+    seed <- if (is.null(params$seed)) -1L else as.integer(params$seed)
+    discords <- find_discords_rra(
+      series,
+      params$window,
+      params$paa,
+      params$alphabet,
+      nr_strategy_r(params$nr_strategy),
+      params$threshold,
+      params$num_discords,
+      seed
+    )
+    if (nrow(discords) < 1) {
+      stop("RRA found no discords", call. = FALSE)
+    }
+    hot <- find_discords_hotsax(
+      series,
+      params$window,
+      params$paa,
+      params$alphabet,
+      params$threshold,
+      1L
+    )
+    return(list(
+      top_discord = list(
+        start = as.integer(discords$start[1]),
+        end = as.integer(discords$end[1])
+      ),
+      hotsax_top_position = as.integer(hot$position[1])
+    ))
+  }
+
   if (op == "discord_bruteforce") {
     discords <- find_discords_brute_force(
       series,

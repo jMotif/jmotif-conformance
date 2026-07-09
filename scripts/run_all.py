@@ -30,6 +30,44 @@ def load_env(path: Path) -> dict[str, str]:
     return env
 
 
+def java_rra_args(case: dict, root: Path) -> list[str]:
+    params = case.get("params", {})
+    args = [
+        "java",
+        "-Dorg.slf4j.simpleLogger.defaultLogLevel=off",
+        "-cp",
+        os.environ["JAVA_RRA_CLASSPATH"],
+        "RRAConformanceRunner",
+        "--repo-root",
+        str(root),
+        "--series",
+        case["series"],
+    ]
+    start, end = case.get("slice", [0, None])
+    args.extend(["--slice-start", str(start)])
+    if end is not None:
+        args.extend(["--slice-end", str(end)])
+    args.extend(
+        [
+            "--window",
+            str(params["window"]),
+            "--paa",
+            str(params["paa"]),
+            "--alphabet",
+            str(params["alphabet"]),
+            "--num-discords",
+            str(params["num_discords"]),
+            "--threshold",
+            str(params["threshold"]),
+            "--nr-strategy",
+            params["nr_strategy"],
+            "--seed",
+            str(params.get("seed", 0)),
+        ]
+    )
+    return args
+
+
 def java_saxvsm_args(case: dict, root: Path) -> list[str]:
     params = case.get("params", {})
     return [
@@ -59,6 +97,8 @@ def java_saxvsm_args(case: dict, root: Path) -> list[str]:
 def java_args(case: dict, root: Path) -> list[str]:
     if case["operation"] == "saxvsm_classify":
         return java_saxvsm_args(case, root)
+    if case["operation"] == "rra_discord":
+        return java_rra_args(case, root)
 
     params = case.get("params", {})
     args = [
@@ -153,6 +193,9 @@ def main() -> int:
         return 2
     if args.impl in {"java", "all"} and "JAVA_SAXVSM_CLASSPATH" not in os.environ:
         print("JAVA_SAXVSM_CLASSPATH is not set; run scripts/bootstrap.sh first", file=sys.stderr)
+        return 2
+    if args.impl in {"java", "all"} and "JAVA_RRA_CLASSPATH" not in os.environ:
+        print("JAVA_RRA_CLASSPATH is not set; run scripts/bootstrap.sh first", file=sys.stderr)
         return 2
 
     root = repo_root()

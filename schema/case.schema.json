@@ -20,7 +20,8 @@
         "discord_hotsax",
         "sax_via_window",
         "repair",
-        "saxvsm_classify"
+        "saxvsm_classify",
+        "rra_discord"
       ]
     },
     "params": { "type": "object" },

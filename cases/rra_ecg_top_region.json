@@ -1,0 +1,20 @@
+{
+  "id": "rra_ecg_top_region",
+  "series": "datasets/ecg0606_1.csv",
+  "slice": [0, null],
+  "operation": "rra_discord",
+  "params": {
+    "window": 100,
+    "paa": 4,
+    "alphabet": 4,
+    "num_discords": 1,
+    "threshold": 0.01,
+    "nr_strategy": "NONE",
+    "seed": 0
+  },
+  "expect": {
+    "rra_overlaps_hotsax_window": true
+  },
+  "aligned": ["java", "r", "python"],
+  "generated_by": "saxpy 2.0.0 (tier-B region check)"
+}

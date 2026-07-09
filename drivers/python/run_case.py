@@ -90,6 +90,37 @@ def run_case(case: dict) -> dict:
             "total": total,
         }
 
+    if op == "rra_discord":
+        from saxpy.hotsax import find_discords_hotsax
+        from saxpy.rra import find_discords_rra
+
+        series = np.asarray(load_series(case, repo_root()), dtype=float)
+        discords = find_discords_rra(
+            series,
+            params["window"],
+            params["paa"],
+            params["alphabet"],
+            nr_strategy=nr_strategy_python(params["nr_strategy"]),
+            znorm_threshold=params["threshold"],
+            num_discords=params["num_discords"],
+            random_state=params.get("seed", 0),
+        )
+        if not discords:
+            raise RuntimeError("RRA found no discords")
+        top = discords[0]
+        hot = find_discords_hotsax(
+            series,
+            win_size=params["window"],
+            num_discords=1,
+            paa_size=params["paa"],
+            alphabet_size=params["alphabet"],
+            znorm_threshold=params["threshold"],
+        )
+        return {
+            "top_discord": {"start": int(top.start), "end": int(top.end)},
+            "hotsax_top_position": int(hot[0][0]),
+        }
+
     series = np.asarray(load_series(case, repo_root()), dtype=float)
 
     if op == "discord_bruteforce":
