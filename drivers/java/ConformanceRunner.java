@@ -152,7 +152,7 @@ public class ConformanceRunner {
 
   private static void printDiscordResult(DiscordRecords records) {
     StringBuilder sb = new StringBuilder("{\"discords\":[");
-    for (int i = 0; i < records.size(); i++) {
+    for (int i = 0; i < records.getSize(); i++) {
       DiscordRecord d = records.get(i);
       if (i > 0) {
         sb.append(',');
