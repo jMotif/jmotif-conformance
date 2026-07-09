@@ -113,13 +113,13 @@ public class ConformanceRunner {
   }
 
   private static DiscordRecords bruteForce(double[] series, int window, int numDiscords, double threshold)
-      throws SAXException {
+      throws Exception {
     return BruteForceDiscordImplementation.series2BruteForceDiscords(series, window, numDiscords,
         new LargeWindowAlgorithm(), threshold);
   }
 
   private static DiscordRecords hotSax(double[] series, int window, int paa, int alphabet, int numDiscords,
-      double threshold, String nrStrategy) throws SAXException {
+      double threshold, String nrStrategy) throws Exception {
     return HOTSAXImplementation.series2Discords(series, numDiscords, window, paa, alphabet,
         parseNrStrategy(nrStrategy), threshold);
   }
