@@ -95,6 +95,16 @@ RRA (Rare Rule Anomaly) uses variable-length grammar-rule intervals, so cross-la
 
 The Java driver follows the saxpy / jmotif-R pipeline (RePair on the composed SAX string, saxpy-style zero-coverage filtering, seeded phase-2 shuffle). GrammarViz’s pruned-RRA CLI path is intentionally not used here.
 
+## Git hooks (optional)
+
+To block accidental commits of Cursor/Claude/audit artifacts, run once per clone:
+
+```bash
+./scripts/install-git-hooks.sh
+```
+
+`.gitignore` already excludes these paths; the hook is a second line of defense.
+
 ## Requirements
 
 - JDK 21+
