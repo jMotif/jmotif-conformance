@@ -1,0 +1,21 @@
+{
+  "id": "saxvsm_cbf",
+  "operation": "saxvsm_classify",
+  "train": "datasets/cbf_train.txt",
+  "test": "datasets/cbf_test.txt",
+  "params": {
+    "window": 60,
+    "paa": 8,
+    "alphabet": 6,
+    "threshold": 0.01,
+    "nr_strategy": "EXACT"
+  },
+  "expect": {
+    "accuracy": 1.0,
+    "error": 0.0,
+    "correct": 900,
+    "total": 900
+  },
+  "aligned": ["java", "r", "python"],
+  "generated_by": "sax-vsm 2.0.1 / saxpy 2.0.0"
+}

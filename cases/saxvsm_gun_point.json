@@ -1,0 +1,21 @@
+{
+  "id": "saxvsm_gun_point",
+  "operation": "saxvsm_classify",
+  "train": "datasets/gun_point_train.txt",
+  "test": "datasets/gun_point_test.txt",
+  "params": {
+    "window": 33,
+    "paa": 17,
+    "alphabet": 15,
+    "threshold": 0.01,
+    "nr_strategy": "EXACT"
+  },
+  "expect": {
+    "accuracy": 0.9866666666666666,
+    "error": 0.013333333333333334,
+    "correct": 148,
+    "total": 150
+  },
+  "aligned": ["java", "r", "python"],
+  "generated_by": "sax-vsm 2.0.1 / saxpy 2.0.0"
+}

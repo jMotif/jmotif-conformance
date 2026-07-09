@@ -39,7 +39,6 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/jMotif/SAX.git ../SAX
           git clone --depth 1 https://github.com/jMotif/GI.git ../GI
-          git clone --depth 1 https://github.com/jMotif/sax-vsm_classic.git ../sax-vsm_classic
           git clone --depth 1 https://github.com/jMotif/jmotif-R.git ../jmotif-R
           git clone --depth 1 https://github.com/seninp/saxpy.git ../saxpy
 

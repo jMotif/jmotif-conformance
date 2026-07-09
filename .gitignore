@@ -3,5 +3,6 @@ __pycache__/
 *.pyc
 .Rproj.user
 drivers/java/*.class
+drivers/java/net/
 .build/
 *.log

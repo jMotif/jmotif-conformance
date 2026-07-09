@@ -71,6 +71,95 @@ r0_no_repeated_digram <- function(r0_rule_string) {
   !any(duplicated(digrams))
 }
 
+load_ucr_data <- function(path) {
+  data <- list()
+  lines <- readLines(path, warn = FALSE)
+  for (line in lines) {
+    line <- trimws(line)
+    if (!nzchar(line)) {
+      next
+    }
+    parts <- strsplit(gsub(",", " ", line), "\\s+")[[1]]
+    parts <- parts[nzchar(parts)]
+    if (length(parts) < 2) {
+      next
+    }
+    label <- parts[[1]]
+    label_num <- suppressWarnings(as.numeric(label))
+    if (!is.na(label_num)) {
+      label <- as.character(as.integer(round(label_num)))
+    }
+    values <- as.numeric(parts[-1])
+    if (is.null(data[[label]])) {
+      data[[label]] <- list(values)
+    } else {
+      data[[label]] <- c(data[[label]], list(values))
+    }
+  }
+  data
+}
+
+saxvsm_predict_label <- function(bag, tfidf) {
+  cosines <- cosine_sim(list(bag = bag, tfidf = tfidf))
+  vals <- cosines$cosines
+  if (length(unique(vals)) <= 1) {
+    return(NA_character_)
+  }
+  cosines$classes[[which.max(vals)]]
+}
+
+run_saxvsm_classify <- function(case, root) {
+  params <- case$params
+  train <- load_ucr_data(file.path(root, case$train))
+  test <- load_ucr_data(file.path(root, case$test))
+  nr <- nr_strategy_r(params$nr_strategy)
+  class_name <- function(label) paste0("c", label)
+  bags <- setNames(
+    lapply(names(train), function(label) {
+      mat <- do.call(rbind, train[[label]])
+      manyseries_to_wordbag(
+        mat,
+        params$window,
+        params$paa,
+        params$alphabet,
+        nr,
+        params$threshold
+      )
+    }),
+    vapply(names(train), class_name, character(1))
+  )
+  tfidf <- bags_to_tfidf(bags)
+  correct <- 0L
+  total <- 0L
+  for (label in names(test)) {
+    for (series in test[[label]]) {
+      total <- total + 1L
+      bag <- series_to_wordbag(
+        series,
+        params$window,
+        params$paa,
+        params$alphabet,
+        nr,
+        params$threshold
+      )
+      predicted <- saxvsm_predict_label(bag, tfidf)
+      if (!is.na(predicted)) {
+        predicted <- sub("^c", "", predicted)
+      }
+      if (!is.na(predicted) && identical(predicted, label)) {
+        correct <- correct + 1L
+      }
+    }
+  }
+  accuracy <- if (total == 0L) 0 else correct / total
+  list(
+    accuracy = accuracy,
+    error = 1 - accuracy,
+    correct = correct,
+    total = total
+  )
+}
+
 run_case <- function(case, root) {
   op <- case$operation
   params <- case$params
@@ -81,6 +170,10 @@ run_case <- function(case, root) {
     result <- repair_rules_from_grammar(grammar)
     result$input <- sax_string
     return(result)
+  }
+
+  if (op == "saxvsm_classify") {
+    return(run_saxvsm_classify(case, root))
   }
 
   series <- load_series(case, root)

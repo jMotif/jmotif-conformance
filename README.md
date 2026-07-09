@@ -32,6 +32,8 @@ Sibling checkout layout:
 ~/git/
   jmotif-conformance/
   SAX/              # or jmotif-java/
+  GI/
+  sax-vsm_classic/
   jmotif-R/
   saxpy/
 ```
@@ -70,8 +72,11 @@ Review the diff carefully before committing.
 | `discord_bruteforce` | yes |
 | `discord_hotsax` (`NONE`, positions + distances) | yes |
 | `repair` (RePair decompression + R0 invariants) | yes |
+| `saxvsm_classify` (CBF, Gun_Point accuracy) | yes |
 
 RePair rule **numbering** is compared exactly only on tie-free inputs (paper example, `a b a b`). Long SAX strings check decompression round-trip and the no-repeated-digram guarantee on R0 instead of per-rule IDs.
+
+SAX-VSM cases pin train/test accuracy (`correct`, `total`, `accuracy`, `error`) at operating points aligned with sax-vsm 2.0.1 / saxpy 2.0.0.
 
 ## Requirements
 

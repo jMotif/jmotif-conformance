@@ -2,10 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "jmotif conformance case",
   "type": "object",
-  "required": ["id", "series", "operation", "params", "expect", "aligned"],
+  "required": ["id", "operation", "params", "expect", "aligned"],
   "properties": {
     "id": { "type": "string" },
     "series": { "type": "string" },
+    "train": { "type": "string" },
+    "test": { "type": "string" },
     "slice": {
       "type": "array",
       "items": [{ "type": "integer" }, { "type": ["integer", "null"] }],
@@ -13,7 +15,13 @@
       "maxItems": 2
     },
     "operation": {
-      "enum": ["discord_bruteforce", "discord_hotsax", "sax_via_window", "repair"]
+      "enum": [
+        "discord_bruteforce",
+        "discord_hotsax",
+        "sax_via_window",
+        "repair",
+        "saxvsm_classify"
+      ]
     },
     "params": { "type": "object" },
     "expect": { "type": "object" },

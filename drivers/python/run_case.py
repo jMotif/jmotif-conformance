@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from case_lib import load_case, load_sax_string, load_series, nr_strategy_python, repo_root  # noqa: E402
+from case_lib import load_case, load_sax_string, load_series, load_ucr_data, nr_strategy_python, repo_root  # noqa: E402
 from repair_lib import normalize_repair_output  # noqa: E402
 
 
@@ -49,6 +49,46 @@ def run_case(case: dict) -> dict:
 
     if op == "repair":
         return run_repair(load_sax_string(case, repo_root()))
+
+    if op == "saxvsm_classify":
+        from saxpy.saxvsm import classify_series, train_tfidf
+
+        train = {
+            label: [np.asarray(series, dtype=float) for series in series_list]
+            for label, series_list in load_ucr_data(repo_root() / case["train"]).items()
+        }
+        test = load_ucr_data(repo_root() / case["test"])
+        tfidf = train_tfidf(
+            train,
+            params["window"],
+            params["paa"],
+            params["alphabet"],
+            nr_strategy=nr_strategy_python(params["nr_strategy"]),
+            znorm_threshold=params["threshold"],
+        )
+        correct = 0
+        total = 0
+        for true_label, series_list in test.items():
+            for series in series_list:
+                total += 1
+                predicted = classify_series(
+                    np.asarray(series, dtype=float),
+                    tfidf,
+                    params["window"],
+                    params["paa"],
+                    params["alphabet"],
+                    nr_strategy=nr_strategy_python(params["nr_strategy"]),
+                    znorm_threshold=params["threshold"],
+                )
+                if predicted == true_label:
+                    correct += 1
+        accuracy = correct / total if total else 0.0
+        return {
+            "accuracy": accuracy,
+            "error": 1.0 - accuracy,
+            "correct": correct,
+            "total": total,
+        }
 
     series = np.asarray(load_series(case, repo_root()), dtype=float)
 

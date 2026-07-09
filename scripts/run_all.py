@@ -30,7 +30,36 @@ def load_env(path: Path) -> dict[str, str]:
     return env
 
 
+def java_saxvsm_args(case: dict, root: Path) -> list[str]:
+    params = case.get("params", {})
+    return [
+        "java",
+        "-cp",
+        os.environ["JAVA_SAXVSM_CLASSPATH"],
+        "net.seninp.jmotif.SaxVSMConformanceRunner",
+        "--repo-root",
+        str(root),
+        "--train",
+        case["train"],
+        "--test",
+        case["test"],
+        "--window",
+        str(params["window"]),
+        "--paa",
+        str(params["paa"]),
+        "--alphabet",
+        str(params["alphabet"]),
+        "--threshold",
+        str(params["threshold"]),
+        "--nr-strategy",
+        params["nr_strategy"],
+    ]
+
+
 def java_args(case: dict, root: Path) -> list[str]:
+    if case["operation"] == "saxvsm_classify":
+        return java_saxvsm_args(case, root)
+
     params = case.get("params", {})
     args = [
         "java",
@@ -121,6 +150,9 @@ def main() -> int:
     os.environ.update(local)
     if args.impl in {"java", "all"} and "JMOTIF_JAVA_CLASSPATH" not in os.environ:
         print("JMOTIF_JAVA_CLASSPATH is not set; run scripts/bootstrap.sh first", file=sys.stderr)
+        return 2
+    if args.impl in {"java", "all"} and "JAVA_SAXVSM_CLASSPATH" not in os.environ:
+        print("JAVA_SAXVSM_CLASSPATH is not set; run scripts/bootstrap.sh first", file=sys.stderr)
         return 2
 
     root = repo_root()

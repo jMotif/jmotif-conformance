@@ -48,6 +48,15 @@ def verify(actual: dict[str, Any], case: dict[str, Any]) -> list[str]:
     if expect.get("r0_no_repeated_digram") and not actual.get("r0_no_repeated_digram"):
         errors.append("R0 contains a repeated digram")
 
+    if "accuracy" in expect:
+        tol = expect.get("tolerance", {}).get("accuracy", 1e-12)
+        for key in ("accuracy", "error"):
+            if key in expect and not _close(float(actual.get(key, -1)), float(expect[key]), tol):
+                errors.append(f"{key} {actual.get(key)!r} != {expect[key]!r} (tol={tol})")
+        for key in ("correct", "total"):
+            if key in expect and actual.get(key) != expect[key]:
+                errors.append(f"{key} {actual.get(key)!r} != {expect[key]!r}")
+
     if "discords" in expect:
         tol = expect.get("tolerance", {}).get("nn_distance", 1e-6)
         got = actual.get("discords", [])

@@ -28,15 +28,6 @@ if [[ -z "${JMOTIF_GI_DIR:-}" ]]; then
   done
 fi
 : "${JMOTIF_GI_DIR:?set JMOTIF_GI_DIR or clone GI/jmotif-gi next to this repo}"
-if [[ -z "${SAX_VSM_DIR:-}" ]]; then
-  for candidate in "${ROOT}/../sax-vsm_classic" "${ROOT}/../sax-vsm"; do
-    if [[ -d "${candidate}" ]]; then
-      SAX_VSM_DIR="${candidate}"
-      break
-    fi
-  done
-fi
-: "${SAX_VSM_DIR:?set SAX_VSM_DIR or clone sax-vsm_classic next to this repo}"
 
 log() { printf '==> %s\n' "$*"; }
 
@@ -76,7 +67,6 @@ maybe_clone() {
 
 maybe_clone "https://github.com/jMotif/SAX.git" "${JMOTIF_JAVA_DIR}" "${JMOTIF_JAVA_REF:-master}"
 maybe_clone "https://github.com/jMotif/GI.git" "${JMOTIF_GI_DIR}" "${JMOTIF_GI_REF:-master}"
-maybe_clone "https://github.com/jMotif/sax-vsm_classic.git" "${SAX_VSM_DIR}" "${SAX_VSM_REF:-master}"
 maybe_clone "https://github.com/jMotif/jmotif-R.git" "${JMOTIF_R_DIR}" "${JMOTIF_R_REF:-master}"
 maybe_clone "https://github.com/seninp/saxpy.git" "${SAXPY_DIR}" "${SAXPY_REF:-master}"
 
@@ -91,32 +81,15 @@ GI_JAR="${JMOTIF_GI_DIR}/target/jmotif-gi-"*".jar"
 GI_JAR="$(ls -1 ${GI_JAR} | grep -v 'sources\\|javadoc' | head -n 1)"
 GI_CP="$(mvn -q -f "${JMOTIF_GI_DIR}/pom.xml" -Dmdep.outputFile=/dev/stdout dependency:build-classpath)"
 
-log "building sax-vsm"
-mvn -q -f "${SAX_VSM_DIR}/pom.xml" package -P single -DskipTests
-SAX_VSM_JAR="${SAX_VSM_DIR}/target/sax-vsm-"*"-jar-with-dependencies.jar"
-SAX_VSM_JAR="$(ls -1 ${SAX_VSM_JAR} | tail -n 1)"
-
 log "compiling Java conformance driver"
 mkdir -p "${ROOT}/drivers/java"
 javac -cp "${GI_JAR}:${GI_CP}" -d "${ROOT}/drivers/java" "${ROOT}/drivers/java/ConformanceRunner.java"
 JAVA_CLASSPATH="${GI_JAR}:${GI_CP}:${ROOT}/drivers/java"
 
-log "compiling SAX-VSM conformance driver"
-javac -cp "${SAX_VSM_JAR}" -d "${ROOT}/drivers/java" "${ROOT}/drivers/java/SaxVSMConformanceRunner.java"
-JAVA_SAXVSM_CLASSPATH="${SAX_VSM_JAR}:${ROOT}/drivers/java"
-
 log "installing jmotif-R"
 R_LIBS_USER="${ROOT}/.build/r-library"
 mkdir -p "${R_LIBS_USER}"
 export R_LIBS_USER
-log "installing R dependencies into ${R_LIBS_USER}"
-Rscript -e '
-lib <- Sys.getenv("R_LIBS_USER")
-dir.create(lib, showWarnings = FALSE, recursive = TRUE)
-pkgs <- c("Rcpp", "jsonlite")
-need <- pkgs[!vapply(pkgs, function(p) requireNamespace(p, quietly = TRUE, lib.loc = lib), logical(1))]
-if (length(need)) install.packages(need, lib = lib, repos = "https://cloud.r-project.org")
-'
 R CMD INSTALL -l "${R_LIBS_USER}" "${JMOTIF_R_DIR}"
 
 log "installing saxpy"
@@ -138,9 +111,6 @@ JMOTIF_JAVA_JAR=${JAVA_JAR}
 JMOTIF_JAVA_CLASSPATH=${JAVA_CLASSPATH}
 JMOTIF_GI_DIR=${JMOTIF_GI_DIR}
 JMOTIF_GI_JAR=${GI_JAR}
-SAX_VSM_DIR=${SAX_VSM_DIR}
-SAX_VSM_JAR=${SAX_VSM_JAR}
-JAVA_SAXVSM_CLASSPATH=${JAVA_SAXVSM_CLASSPATH}
 JMOTIF_R_DIR=${JMOTIF_R_DIR}
 R_LIBS_USER=${R_LIBS_USER}
 SAXPY_DIR=${SAXPY_DIR}
