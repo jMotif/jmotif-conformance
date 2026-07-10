@@ -1,5 +1,8 @@
 # jmotif-conformance
 
+[![conformance](https://github.com/jMotif/jmotif-conformance/actions/workflows/conformance.yml/badge.svg)](https://github.com/jMotif/jmotif-conformance/actions/workflows/conformance.yml)
+[![License](https://img.shields.io/github/license/jMotif/jmotif-conformance)](https://www.gnu.org/licenses/gpl-2.0.html)
+
 Shared golden tests for the jMotif SAX stack across **Java** ([jMotif/SAX](https://github.com/jMotif/SAX)), **R** ([jMotif/jmotif-R](https://github.com/jMotif/jmotif-R)), and **Python** ([seninp/saxpy](https://github.com/seninp/saxpy)).
 
 [saxpy](https://github.com/seninp/saxpy) is the reference generator for expected values. Each implementation runs the same case definitions and is checked against the committed expectations.
