@@ -80,7 +80,13 @@ maybe_clone() {
   log "checking out ${ref} in ${dir}"
   git -C "${dir}" fetch --tags origin
   git -C "${dir}" checkout "${ref}"
-  git -C "${dir}" pull --ff-only origin "$(git -C "${dir}" rev-parse --abbrev-ref HEAD)" || true
+  # Only fast-forward when tracking a branch; a pinned SHA leaves a detached
+  # HEAD (rev-parse --abbrev-ref == "HEAD") and pulling would defeat the pin.
+  local branch
+  branch="$(git -C "${dir}" rev-parse --abbrev-ref HEAD)"
+  if [[ "${branch}" != "HEAD" ]]; then
+    git -C "${dir}" pull --ff-only origin "${branch}" || true
+  fi
 }
 
 maybe_clone "https://github.com/jMotif/SAX.git" "${JMOTIF_JAVA_DIR}" "${JMOTIF_JAVA_REF:-master}"
