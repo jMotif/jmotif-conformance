@@ -148,27 +148,51 @@ def verify(actual: dict[str, Any], case: dict[str, Any]) -> list[str]:
     return errors
 
 
-def verify_consensus(results: dict[str, dict[str, Any]], case: dict[str, Any]) -> list[str]:
+def verify_consensus(
+    results: dict[str, dict[str, Any]],
+    case: dict[str, Any],
+    attempted: list[str],
+) -> list[str]:
     """Cross-language checks that need every aligned implementation's output.
 
     For RRA (tier-B) we require the top discord regions found by each language to
     mutually overlap by a fraction of the window, so agreement is asserted between
     implementations directly, not only against each one's own HOT-SAX anchor.
+
+    ``attempted`` is the list of implementations the harness actually ran for this
+    case (aligned impls, filtered by any ``--impl`` selection). Consensus only
+    applies when at least two of them ran; when it applies, EVERY participant must
+    contribute a well-formed ``top_discord`` -- a missing or malformed span is a
+    consensus failure, not a silent pass, so a partial run can never claim
+    cross-language agreement.
     """
     expect = case.get("expect", {})
     frac = expect.get("rra_consensus_min_fraction")
     if frac is None:
         return []
     frac = float(frac)
-    window = int(case.get("params", {}).get("window", 0))
-    spans = {
-        impl: r["top_discord"]
-        for impl, r in results.items()
-        if isinstance(r, dict) and r.get("top_discord")
-    }
-    if len(spans) < 2 or window <= 0:
+    aligned = case.get("aligned", attempted)
+    participants = [impl for impl in attempted if impl in aligned]
+    if len(participants) < 2:
+        # cross-language consensus is not meaningful with fewer than two impls
         return []
+    window = int(case.get("params", {}).get("window", 0))
+    if window <= 0:
+        return [f"consensus: window <= 0 ({window}), cannot compute overlap"]
+
     errors: list[str] = []
+    spans: dict[str, dict[str, Any]] = {}
+    for impl in participants:
+        r = results.get(impl)
+        top = r.get("top_discord") if isinstance(r, dict) else None
+        if not isinstance(top, dict) or "start" not in top or "end" not in top:
+            errors.append(f"consensus: missing/malformed top_discord for aligned impl '{impl}'")
+            continue
+        spans[impl] = top
+    if errors:
+        # cannot assert consensus unless every participating impl produced a span
+        return errors
+
     impls = sorted(spans)
     for i in range(len(impls)):
         for j in range(i + 1, len(impls)):

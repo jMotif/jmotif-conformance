@@ -229,14 +229,19 @@ def main() -> int:
                 print("OK")
 
         # Cross-language checks that compare implementations against each other.
-        if len(results) > 1:
-            consensus_errors = verify_consensus(results, case)
+        # Run whenever the case expects consensus and at least two aligned impls were
+        # attempted, so a crashed/missing impl surfaces as a consensus FAIL rather than a
+        # silent OK on the survivors.
+        attempted = [impl for impl in impls if impl in aligned]
+        expects_consensus = case.get("expect", {}).get("rra_consensus_min_fraction") is not None
+        if expects_consensus and len(attempted) > 1:
+            consensus_errors = verify_consensus(results, case, attempted)
             if consensus_errors:
                 failures += 1
                 print(f"CASE {case['id']} CONSENSUS ... FAIL")
                 for err in consensus_errors:
                     print(f"  {err}")
-            elif case.get("expect", {}).get("rra_consensus_min_fraction") is not None:
+            else:
                 print(f"CASE {case['id']} CONSENSUS ... OK")
 
     return 1 if failures else 0
