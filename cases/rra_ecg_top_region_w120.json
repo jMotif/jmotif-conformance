@@ -1,10 +1,10 @@
 {
-  "id": "rra_ecg_top_region",
+  "id": "rra_ecg_top_region_w120",
   "series": "datasets/ecg0606_1.csv",
   "slice": [0, null],
   "operation": "rra_discord",
   "params": {
-    "window": 100,
+    "window": 120,
     "paa": 4,
     "alphabet": 4,
     "num_discords": 1,
@@ -22,5 +22,5 @@
     "rra_consensus_min_fraction": 0.5
   },
   "aligned": ["java", "r", "python"],
-  "generated_by": "saxpy 2.0.0 (tier-B region check)"
+  "generated_by": "saxpy 2.0.0 (tier-B region check, window=120 robustness)"
 }

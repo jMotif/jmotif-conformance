@@ -11,6 +11,11 @@ def _close(actual: float, expected: float, tol: float) -> bool:
     return math.isclose(actual, expected, rel_tol=0.0, abs_tol=tol)
 
 
+def _overlap(a_start: int, a_end: int, b_start: int, b_end: int) -> int:
+    """Length of the intersection of two half-open intervals (0 if disjoint)."""
+    return max(0, min(a_end, b_end) - max(a_start, b_start))
+
+
 def verify(actual: dict[str, Any], case: dict[str, Any]) -> list[str]:
     expect = case["expect"]
     errors: list[str] = []
@@ -105,21 +110,74 @@ def verify(actual: dict[str, Any], case: dict[str, Any]) -> list[str]:
                 f"hotsax position {hot} not in top discord [{top['start']}, {top['end']})"
             )
 
+    # RRA is tier-B: variable-length grammar-rule intervals, so exact spans are
+    # not cross-checked. Instead we assert the top region lands where it should,
+    # with a *substantial* overlap (a fraction of the window, not a single sample).
+    window = int(case.get("params", {}).get("window", 0))
+    min_frac = float(expect.get("rra_min_overlap_fraction", 0.5))
+
     if expect.get("rra_overlaps_hotsax_window"):
         top = actual.get("top_discord")
         hot = actual.get("hotsax_top_position")
-        window = int(case.get("params", {}).get("window", 0))
         if top is None or hot is None or window <= 0:
             errors.append("missing top_discord, hotsax_top_position, or window for overlap check")
         else:
-            rra_start = int(top["start"])
-            rra_end = int(top["end"])
-            hot_start = int(hot)
-            hot_end = hot_start + window
-            if max(rra_start, hot_start) >= min(rra_end, hot_end):
+            ov = _overlap(int(top["start"]), int(top["end"]), int(hot), int(hot) + window)
+            frac = ov / window
+            if frac < min_frac:
                 errors.append(
-                    f"RRA span [{rra_start}, {rra_end}) does not overlap "
-                    f"HOT-SAX window [{hot_start}, {hot_end})"
+                    f"RRA span [{top['start']}, {top['end']}) overlaps HOT-SAX window "
+                    f"[{hot}, {int(hot) + window}) by {ov}/{window}={frac:.2f} < {min_frac}"
                 )
 
+    if "rra_ground_truth" in expect:
+        gt = expect["rra_ground_truth"]
+        top = actual.get("top_discord")
+        gt_frac = float(gt.get("min_overlap_fraction", min_frac))
+        if top is None or window <= 0:
+            errors.append("missing top_discord or window for ground-truth check")
+        else:
+            ov = _overlap(int(top["start"]), int(top["end"]), int(gt["start"]), int(gt["end"]))
+            frac = ov / window
+            if frac < gt_frac:
+                errors.append(
+                    f"RRA span [{top['start']}, {top['end']}) overlaps ground-truth region "
+                    f"[{gt['start']}, {gt['end']}) by {ov}/{window}={frac:.2f} < {gt_frac}"
+                )
+
+    return errors
+
+
+def verify_consensus(results: dict[str, dict[str, Any]], case: dict[str, Any]) -> list[str]:
+    """Cross-language checks that need every aligned implementation's output.
+
+    For RRA (tier-B) we require the top discord regions found by each language to
+    mutually overlap by a fraction of the window, so agreement is asserted between
+    implementations directly, not only against each one's own HOT-SAX anchor.
+    """
+    expect = case.get("expect", {})
+    frac = expect.get("rra_consensus_min_fraction")
+    if frac is None:
+        return []
+    frac = float(frac)
+    window = int(case.get("params", {}).get("window", 0))
+    spans = {
+        impl: r["top_discord"]
+        for impl, r in results.items()
+        if isinstance(r, dict) and r.get("top_discord")
+    }
+    if len(spans) < 2 or window <= 0:
+        return []
+    errors: list[str] = []
+    impls = sorted(spans)
+    for i in range(len(impls)):
+        for j in range(i + 1, len(impls)):
+            a, b = spans[impls[i]], spans[impls[j]]
+            ov = _overlap(int(a["start"]), int(a["end"]), int(b["start"]), int(b["end"]))
+            f = ov / window
+            if f < frac:
+                errors.append(
+                    f"{impls[i]} [{a['start']}, {a['end']}) vs {impls[j]} "
+                    f"[{b['start']}, {b['end']}) overlap {ov}/{window}={f:.2f} < {frac}"
+                )
     return errors

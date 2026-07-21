@@ -68,35 +68,57 @@ git diff cases/
 
 Review the diff carefully before committing.
 
-## Case tiers (v1)
+## Case tiers
 
-| Operation | Cross-lang |
-|-----------|------------|
-| `sax_via_window` (`NONE`) | yes |
-| `discord_bruteforce` | yes |
-| `discord_hotsax` (`NONE`, positions + distances) | yes |
-| `repair` (RePair decompression + R0 invariants) | yes |
-| `saxvsm_classify` (CBF, Gun_Point accuracy) | yes |
-| `rra_discord` (ecg0606 top region, tier-B) | yes |
+Every operation runs on **Java × R × Python** and is checked against committed
+expectations. Cases fall into two tiers by how tightly the languages can agree:
 
-RePair rule **numbering** is compared exactly only on tie-free inputs (paper example, `a b a b`). Long SAX strings check decompression round-trip and the no-repeated-digram guarantee on R0 instead of per-rule IDs.
+- **Tier A — exact.** Deterministic outputs are compared value-for-value (integer
+  positions and strings exactly; floats within an absolute tolerance).
+- **Tier B — region-level.** RRA uses variable-length grammar-rule intervals, so
+  exact spans legitimately differ; agreement is asserted on the anomaly *region*
+  with a substantial-overlap threshold plus a ground-truth anchor and a
+  cross-language consensus check.
 
-SAX-VSM cases pin train/test accuracy (`correct`, `total`, `accuracy`, `error`) at operating points aligned with sax-vsm 2.0.1 / saxpy 2.0.0.
+| Operation | Tier | Datasets | Checked exactly (conform) | Tolerance |
+|-----------|:----:|----------|---------------------------|-----------|
+| `sax_via_window` (`NONE`) | A | `synthetic_window_60`, `ecg0606` | SAX word for every window index | exact |
+| `discord_bruteforce` | A | `ecg0606` (full / slice / first-800) | discord `position`; `nn_distance` | `nn_distance` 1e-6 |
+| `discord_hotsax` (`NONE`) | A | `ecg0606` | discord `position` + `nn_distance`; HOT-SAX top ∈ brute-force top discord | `nn_distance` 1e-6 |
+| `repair` | A | `abab`, `paper`, `ecg_sax`, `jmotif_r_bugs` | R0 has no repeated digram; decompress == input; exact rule strings/IDs on tie-free inputs | exact |
+| `saxvsm_classify` | A | CBF, Gun_Point | `correct`, `total`, `accuracy`, `error` | `accuracy` 1e-12 |
+| `rra_discord` | B | `ecg0606` (window 100, 120) | see tier-B table below | ≥ 50% overlap |
+
+RePair rule **numbering** is compared exactly only on tie-free inputs (paper
+example, `a b a b`). Long SAX strings check the decompression round-trip and the
+no-repeated-digram guarantee on R0 instead of per-rule IDs.
+
+SAX-VSM cases pin train/test accuracy (`correct`, `total`, `accuracy`, `error`)
+at operating points aligned with sax-vsm 2.0.1 / saxpy 2.0.0.
 
 ### RRA tier-B (`rra_discord`)
 
-RRA (Rare Rule Anomaly) uses variable-length grammar-rule intervals, so cross-language agreement is checked at the **region** level, not on exact span boundaries or distances:
+RRA (Rare Rule Anomaly) grammar-rule intervals vary in length across
+implementations, so agreement is checked at the **region** level. Each check uses
+a **≥ 50% of window** overlap threshold (not a single-sample touch):
 
 | Checked (conform) | Not checked (de-conform) |
 |-------------------|--------------------------|
-| RRA top span overlaps the HOT-SAX discord window on ecg0606 (primary anomaly region) | Exact `start` / `end` of the top discord |
-| | Whether index 430 lies strictly inside the RRA span (Java NewRepair can shift by one vs saxpy/R) |
-| | `rule_id` of the winning interval |
-| | Exact `nn_distance` (early-abandon is approximate) |
+| RRA top span overlaps the HOT-SAX discord window on ecg0606 by ≥ 50% of the window | Exact `start` / `end` of the top discord |
+| RRA top span overlaps the ground-truth anomaly region `[400, 560)` by ≥ 50% of the window | Whether index 430 lies strictly inside the RRA span (Java NewRepair can shift by one vs saxpy/R) |
+| All three languages' RRA top spans mutually overlap each other by ≥ 50% of the window (consensus) | `rule_id` of the winning interval |
+| Robustness across two window sizes (100, 120) | Exact `nn_distance` (early-abandon is approximate) |
 | | Distance-call count / search trajectory |
 | | Multi-discord ordering beyond the primary region |
 
-The Java driver follows the saxpy / jmotif-R pipeline (RePair on the composed SAX string, saxpy-style zero-coverage filtering, seeded phase-2 shuffle). GrammarViz’s pruned-RRA CLI path is intentionally not used here.
+Thresholds are conservative: on the pinned stack the observed overlaps are
+0.84–1.0, so a 0.5 floor leaves margin for the documented one-sample RePair
+shift while still failing a genuinely divergent region (e.g. window 150, where
+Java's top region jumps elsewhere).
+
+The Java driver follows the saxpy / jmotif-R pipeline (RePair on the composed SAX
+string, saxpy-style zero-coverage filtering, seeded phase-2 shuffle).
+GrammarViz’s pruned-RRA CLI path is intentionally not used here.
 
 ## Git hooks (optional)
 

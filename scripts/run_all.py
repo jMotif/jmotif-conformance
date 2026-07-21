@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from case_lib import load_case, repo_root  # noqa: E402
-from verify_output import verify  # noqa: E402
+from verify_output import verify, verify_consensus  # noqa: E402
 
 
 def load_env(path: Path) -> dict[str, str]:
@@ -206,6 +206,7 @@ def main() -> int:
     for case_path in case_paths:
         case = load_case(case_path)
         aligned = case.get("aligned", impls)
+        results: dict[str, dict] = {}
         for impl in impls:
             if impl not in aligned:
                 continue
@@ -217,6 +218,7 @@ def main() -> int:
                 print("FAIL")
                 print(f"  {exc}")
                 continue
+            results[impl] = actual
             errors = verify(actual, case)
             if errors:
                 failures += 1
@@ -225,6 +227,17 @@ def main() -> int:
                     print(f"  {err}")
             else:
                 print("OK")
+
+        # Cross-language checks that compare implementations against each other.
+        if len(results) > 1:
+            consensus_errors = verify_consensus(results, case)
+            if consensus_errors:
+                failures += 1
+                print(f"CASE {case['id']} CONSENSUS ... FAIL")
+                for err in consensus_errors:
+                    print(f"  {err}")
+            elif case.get("expect", {}).get("rra_consensus_min_fraction") is not None:
+                print(f"CASE {case['id']} CONSENSUS ... OK")
 
     return 1 if failures else 0
 
