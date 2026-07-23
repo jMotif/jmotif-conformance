@@ -21,7 +21,7 @@ Regenerate after stack upgrades (requires `./scripts/bootstrap.sh` first):
 
 Case definitions live in [`cases/bench_rra_hotsax.json`](cases/bench_rra_hotsax.json). Long tiled rows repeat `chfdbchf15_1.csv` with a tiny per-cycle drift so cycles are not exact clones (verbatim tiling can stall HOT-SAX).
 
-**Plausible explanation:** HOT-SAX prunes over SAX-word frequencies but still walks the full word index. RRA pays upfront parallel SAX + Re-Pair + interval construction, then searches fewer grammar-rule candidates. On short series that fixed cost dominates. On **50k+** points in the cases below, RRA wins clearly wall-clock; crossover on real ECG-like data often falls between **~15k and 50k** depending on `(window, PAA, alphabet)` and hardware (see the live table — do not treat 15k as a guaranteed win).
+**What drives the crossover.** HOT-SAX prunes with SAX-word frequencies but still traverses the full word index. RRA pays upfront parallel SAX, Re-Pair, and rule-interval construction, then evaluates fewer variable-length grammar-rule candidates. On short series that fixed cost dominates wall-clock, which is why the ecg0606 rows below favor HOT-SAX. On the tiled long rows (`n ≥ 50k`), RRA wins clearly. Between those extremes the outcome depends on `(window, PAA, alphabet)`, hardware, and SAX-string compressibility — at `n ≈ 15k` either algorithm can be faster on ECG-like data, as the chfdbchf15 row shows.
 
 <!-- bench-rra-hotsax:start -->
 _Generated 2026-07-23 09:00 UTC by `./scripts/bench_rra_hotsax.sh --update-readme` (GrammarViz `grammarviz2_src`, jmotif-sax `jmotif-java`, `k=1`, `seed=0`, NR=`NONE`, z=`0.01`)._
