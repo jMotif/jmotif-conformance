@@ -130,9 +130,13 @@ log "compiling RRA conformance driver"
 javac -cp "${GRAMMARVIZ_JAR}" -d "${ROOT}/drivers/java" "${ROOT}/drivers/java/RRAConformanceRunner.java"
 JAVA_RRA_CLASSPATH="${GRAMMARVIZ_JAR}:${ROOT}/drivers/java"
 
-log "compiling RRA vs HOT-SAX benchmark driver"
-javac -cp "${GRAMMARVIZ_JAR}" -d "${ROOT}/drivers/java" "${ROOT}/drivers/java/RRAvsHotsaxBench.java"
-JAVA_BENCH_CLASSPATH="${GRAMMARVIZ_JAR}:${ROOT}/drivers/java"
+log "compiling RRA vs HOT-SAX benchmark driver (optional; needs GrammarViz with RRAIntervalBuilder)"
+JAVA_BENCH_CLASSPATH=""
+if javac -cp "${GRAMMARVIZ_JAR}" -d "${ROOT}/drivers/java" "${ROOT}/drivers/java/RRAvsHotsaxBench.java" 2>/dev/null; then
+  JAVA_BENCH_CLASSPATH="${GRAMMARVIZ_JAR}:${ROOT}/drivers/java"
+else
+  log "skipped RRAvsHotsaxBench compile at pinned GrammarViz ref — run ./scripts/bench_rra_hotsax.sh to compile against a newer checkout"
+fi
 
 log "installing jmotif-R"
 R_LIBS_USER="${ROOT}/.build/r-library"
