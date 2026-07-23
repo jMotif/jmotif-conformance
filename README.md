@@ -9,7 +9,7 @@ Shared golden tests for the jMotif SAX stack across **Java** ([jMotif/SAX](https
 
 **Published targets (Jul 2026):** saxpy **2.0.1**, jmotif **1.3.2**, jmotif-sax **2.0.2**. Tier-B RRA pins use bundled ecg0606 with `seed = 0`.
 
-## RRA vs HOT-SAX wall-clock (informative, not conformance)
+## RRA vs HOT-SAX wall-clock (benchmark)
 
 These tables measure **Java end-to-end wall time** on GrammarViz’s RRA and HOT-SAX paths. They are **not** golden conformance checks — tier-B RRA asserts **region overlap**, not identical spans or run time. NN distances between the two algorithms are not comparable (fixed-window z-norm vs length-normalized grammar spans).
 
