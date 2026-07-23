@@ -9,6 +9,8 @@ Shared golden tests for the jMotif SAX stack across **Java** ([jMotif/SAX](https
 
 **Published targets (Jul 2026):** saxpy **2.0.1**, jmotif **1.3.2**, jmotif-sax **2.0.2**. Tier-B RRA pins use bundled ecg0606 with `seed = 0`.
 
+**RRA vs HOT-SAX wall-clock** (informative, not conformance): see [docs/rra-vs-hotsax-performance.md](docs/rra-vs-hotsax-performance.md) and the [GrammarViz site §2.4](https://grammarviz2.github.io/grammarviz2_site/anomaly/experience-a2/#24-wall-clock-scaling-rra-vs-hot-sax). Short ecg0606 favors HOT-SAX end-to-end; ~15k+ ECG-like points favor RRA once grammar cost is amortized.
+
 ## Conventions
 
 These cases assume the 2.0.0 alignment rules:
