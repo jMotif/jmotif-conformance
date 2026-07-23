@@ -199,7 +199,12 @@ def main() -> int:
         return 2
 
     root = repo_root()
-    case_paths = [args.case] if args.case else sorted((root / "cases").glob("*.json"))
+    if args.case:
+        case_paths = [args.case]
+    else:
+        case_paths = sorted(
+            p for p in (root / "cases").glob("*.json") if not p.name.startswith("bench_")
+        )
     impls = ["java", "r", "python"] if args.impl == "all" else [args.impl]
 
     failures = 0
