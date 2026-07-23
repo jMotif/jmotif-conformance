@@ -9,7 +9,44 @@ Shared golden tests for the jMotif SAX stack across **Java** ([jMotif/SAX](https
 
 **Published targets (Jul 2026):** saxpy **2.0.1**, jmotif **1.3.2**, jmotif-sax **2.0.2**. Tier-B RRA pins use bundled ecg0606 with `seed = 0`.
 
-**RRA vs HOT-SAX wall-clock** (informative, not conformance): see [docs/rra-vs-hotsax-performance.md](docs/rra-vs-hotsax-performance.md) and the [GrammarViz site §2.4](https://grammarviz2.github.io/grammarviz2_site/anomaly/experience-a2/#24-wall-clock-scaling-rra-vs-hot-sax). Short ecg0606 favors HOT-SAX end-to-end; ~15k+ ECG-like points favor RRA once grammar cost is amortized.
+## RRA vs HOT-SAX wall-clock (informative, not conformance)
+
+These tables measure **Java end-to-end wall time** on GrammarViz’s RRA and HOT-SAX paths. They are **not** golden conformance checks — tier-B RRA asserts **region overlap**, not identical spans or run time. NN distances between the two algorithms are not comparable (fixed-window z-norm vs length-normalized grammar spans).
+
+Regenerate after stack upgrades (requires `./scripts/bootstrap.sh` first):
+
+```bash
+./scripts/bench_rra_hotsax.sh --update-readme
+```
+
+Case definitions live in [`cases/bench_rra_hotsax.json`](cases/bench_rra_hotsax.json). Long tiled rows repeat `chfdbchf15_1.csv` with a tiny per-cycle drift so cycles are not exact clones (verbatim tiling can stall HOT-SAX).
+
+**Plausible explanation:** HOT-SAX prunes over SAX-word frequencies but still walks the full word index. RRA pays upfront parallel SAX + Re-Pair + interval construction, then searches fewer grammar-rule candidates. On short series that fixed cost dominates; on roughly **10k–15k** ECG-like points and beyond, RRA’s reduced search typically wins wall-clock. Crossover depends on `(window, PAA, alphabet)` and hardware.
+
+<!-- bench-rra-hotsax:start -->
+_Generated 2026-07-23 09:00 UTC by `./scripts/bench_rra_hotsax.sh --update-readme` (GrammarViz `grammarviz2_src`, jmotif-sax `jmotif-java`, `k=1`, `seed=0`, NR=`NONE`, z=`0.01`)._
+
+**Short series (ecg0606, `n = 2,299`)**
+
+| Parameters | HOT-SAX | RRA | RRA / HOT-SAX |
+|------------|---------|-----|---------------|
+| `w=120, p=4, a=4` | 50 ms | 76 ms | 1.52× slower |
+| `w=100, p=4, a=4` | 45 ms | 77 ms | 1.71× slower |
+| `w=150, p=7, a=4` | 91 ms | 82 ms | **0.90× faster** |
+
+**Longer ECG-like series (`w=100, p=4, a=4`)**
+
+| Series | `n` | HOT-SAX | RRA | RRA / HOT-SAX |
+|--------|-----|---------|-----|---------------|
+| ecg0606 baseline | 2,299 | 43 ms | 82 ms | 1.91× slower |
+| chfdbchf15 | 15,000 | 235 ms | 317 ms | 1.35× slower |
+| chfdb tiled+drift 50k | 50,000 | 10.5 s | 2447 ms | **0.23× faster** |
+| chfdb tiled+drift 100k | 100,000 | 20.8 s | 7776 ms | **0.37× faster** |
+
+Ratios **below 1.0×** (shown as “faster”) mean RRA had lower wall-clock on that row.
+<!-- bench-rra-hotsax:end -->
+
+Mirror on the [GrammarViz anomaly tutorial §2.4](https://grammarviz2.github.io/grammarviz2_site/anomaly/experience-a2/#24-wall-clock-scaling-rra-vs-hot-sax).
 
 ## Conventions
 
@@ -50,6 +87,7 @@ Sibling checkout layout:
 cd ~/git/jmotif-conformance
 ./scripts/bootstrap.sh      # build/install all three implementations
 ./scripts/run_all.sh        # run every case × every aligned implementation
+./scripts/bench_rra_hotsax.sh --update-readme   # optional: refresh RRA vs HOT-SAX tables in this README
 ```
 
 Run a single implementation or case:

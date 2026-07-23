@@ -1,0 +1,69 @@
+{
+  "description": "Informative RRA vs HOT-SAX wall-clock cases (not conformance goldens).",
+  "k": 1,
+  "seed": 0,
+  "threshold": 0.01,
+  "nr_strategy": "NONE",
+  "runs": [
+    {
+      "group": "short",
+      "label": "w=120, p=4, a=4",
+      "dataset": "ecg0606_1.csv",
+      "window": 120,
+      "paa": 4,
+      "alphabet": 4
+    },
+    {
+      "group": "short",
+      "label": "w=100, p=4, a=4",
+      "dataset": "ecg0606_1.csv",
+      "window": 100,
+      "paa": 4,
+      "alphabet": 4
+    },
+    {
+      "group": "short",
+      "label": "w=150, p=7, a=4",
+      "dataset": "ecg0606_1.csv",
+      "window": 150,
+      "paa": 7,
+      "alphabet": 4
+    },
+    {
+      "group": "long",
+      "label": "ecg0606 baseline",
+      "dataset": "ecg0606_1.csv",
+      "window": 100,
+      "paa": 4,
+      "alphabet": 4
+    },
+    {
+      "group": "long",
+      "label": "chfdbchf15",
+      "dataset": "chfdbchf15_1.csv",
+      "window": 100,
+      "paa": 4,
+      "alphabet": 4
+    },
+    {
+      "group": "long",
+      "label": "chfdb tiled+drift 50k",
+      "dataset": "chfdbchf15_1.csv",
+      "tile_length": 50000,
+      "tile_drift": true,
+      "window": 100,
+      "paa": 4,
+      "alphabet": 4
+    },
+    {
+      "group": "long",
+      "label": "chfdb tiled+drift 100k",
+      "dataset": "chfdbchf15_1.csv",
+      "tile_length": 100000,
+      "tile_drift": true,
+      "window": 100,
+      "paa": 4,
+      "alphabet": 4
+    }
+  ]
+}

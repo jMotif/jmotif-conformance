@@ -20,7 +20,10 @@ releases yet — the repo tracks `master` and pins upstream implementations in C
 - **CI:** pin upstream implementations to commit SHAs instead of floating `master`;
   install `jmotif-gi` for GrammarViz dependency; run conformance on conformance on push/PR.
 - **RRA tier-B docs:** expanded case-tier table and overlap thresholds in README.
-- **Performance note:** [docs/rra-vs-hotsax-performance.md](docs/rra-vs-hotsax-performance.md) — RRA vs HOT-SAX wall-clock tables (informative, not conformance); linked from README and GrammarViz site §2.4.
+- **Performance bench:** `./scripts/bench_rra_hotsax.sh` runs Java wall-clock cases from
+  `cases/bench_rra_hotsax.json` and can refresh the README tables (`--update-readme`).
+- **Performance note:** RRA vs HOT-SAX wall-clock tables live in README (auto-generated block);
+  mirrored on GrammarViz site §2.4.
 
 ### Fixed
 - **RRA consensus:** require all aligned implementations to participate (not a subset).

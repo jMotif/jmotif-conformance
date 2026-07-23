@@ -130,6 +130,10 @@ log "compiling RRA conformance driver"
 javac -cp "${GRAMMARVIZ_JAR}" -d "${ROOT}/drivers/java" "${ROOT}/drivers/java/RRAConformanceRunner.java"
 JAVA_RRA_CLASSPATH="${GRAMMARVIZ_JAR}:${ROOT}/drivers/java"
 
+log "compiling RRA vs HOT-SAX benchmark driver"
+javac -cp "${GRAMMARVIZ_JAR}" -d "${ROOT}/drivers/java" "${ROOT}/drivers/java/RRAvsHotsaxBench.java"
+JAVA_BENCH_CLASSPATH="${GRAMMARVIZ_JAR}:${ROOT}/drivers/java"
+
 log "installing jmotif-R"
 R_LIBS_USER="${ROOT}/.build/r-library"
 mkdir -p "${R_LIBS_USER}"
@@ -169,6 +173,7 @@ JAVA_SAXVSM_CLASSPATH=${JAVA_SAXVSM_CLASSPATH}
 GRAMMARVIZ_DIR=${GRAMMARVIZ_DIR}
 GRAMMARVIZ_JAR=${GRAMMARVIZ_JAR}
 JAVA_RRA_CLASSPATH=${JAVA_RRA_CLASSPATH}
+JAVA_BENCH_CLASSPATH=${JAVA_BENCH_CLASSPATH}
 JMOTIF_R_DIR=${JMOTIF_R_DIR}
 R_LIBS_USER=${R_LIBS_USER}
 SAXPY_DIR=${SAXPY_DIR}
