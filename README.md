@@ -7,6 +7,8 @@ Shared golden tests for the jMotif SAX stack across **Java** ([jMotif/SAX](https
 
 [saxpy](https://github.com/seninp/saxpy) is the reference generator for expected values. Each implementation runs the same case definitions and is checked against the committed expectations.
 
+**Published targets (Jul 2026):** saxpy **2.0.1**, jmotif **1.3.2**, jmotif-sax **2.0.2**. Tier-B RRA pins use bundled ecg0606 with `seed = 0`.
+
 ## Conventions
 
 These cases assume the 2.0.0 alignment rules:
