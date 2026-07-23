@@ -21,7 +21,7 @@ Regenerate after stack upgrades (requires `./scripts/bootstrap.sh` first):
 
 Case definitions live in [`cases/bench_rra_hotsax.json`](cases/bench_rra_hotsax.json). Long tiled rows repeat `chfdbchf15_1.csv` with a tiny per-cycle drift so cycles are not exact clones (verbatim tiling can stall HOT-SAX).
 
-**Plausible explanation:** HOT-SAX prunes over SAX-word frequencies but still walks the full word index. RRA pays upfront parallel SAX + Re-Pair + interval construction, then searches fewer grammar-rule candidates. On short series that fixed cost dominates; on roughly **10k–15k** ECG-like points and beyond, RRA’s reduced search typically wins wall-clock. Crossover depends on `(window, PAA, alphabet)` and hardware.
+**Plausible explanation:** HOT-SAX prunes over SAX-word frequencies but still walks the full word index. RRA pays upfront parallel SAX + Re-Pair + interval construction, then searches fewer grammar-rule candidates. On short series that fixed cost dominates. On **50k+** points in the cases below, RRA wins clearly wall-clock; crossover on real ECG-like data often falls between **~15k and 50k** depending on `(window, PAA, alphabet)` and hardware (see the live table — do not treat 15k as a guaranteed win).
 
 <!-- bench-rra-hotsax:start -->
 _Generated 2026-07-23 09:00 UTC by `./scripts/bench_rra_hotsax.sh --update-readme` (GrammarViz `grammarviz2_src`, jmotif-sax `jmotif-java`, `k=1`, `seed=0`, NR=`NONE`, z=`0.01`)._
